@@ -14,7 +14,8 @@ class lamda_talent:
         if model_name in models_list.classical_models:
             self.args, default_para, opt_space = get_classical_args()
         elif model_name in models_list.deep_models:
-            self.args, default_para, opt_space = get_deep_args()
+            config_path=model_name+".json"
+            self.args, default_para, opt_space = get_deep_args(config_path)
         else:
             raise NotImplementedError('Model "' + model_name + '" not yet implemented')
         print(self.args)

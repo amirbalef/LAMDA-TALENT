@@ -325,19 +325,25 @@ def get_classical_args():
     args.config['fit']['n_bins'] = args.n_bins
     return args,default_para,opt_space   
 
-def get_deep_args(model_type=None):  
+def get_deep_args(config_path:str = None):  
     """
     Get the arguments for deep learning models.
 
     :return: argparse.Namespace, arguments
     """
+    
     import argparse 
     import warnings
     warnings.filterwarnings("ignore")
 
     parser = argparse.ArgumentParser()
     # basic parameters
-    with open(THIS_PATH + '/../configs/deep_configs.json','r') as file:
+    if config_path is None:
+        config_path = '/../configs/deep_configs.json'
+    else:
+        config_path = "/../configs/" + config_path
+    config_path = THIS_PATH + config_path         
+    with open(config_path) as file:
         default_args = json.load(file)
     parser.add_argument('--dataset', type=str, default=default_args['dataset'])
     parser.add_argument('--model_type', type=str, 
@@ -373,8 +379,7 @@ def get_deep_args(model_type=None):
     parser.add_argument('--dataset_path', type=str, default=default_args['dataset_path'])  
     parser.add_argument('--model_path', type=str, default=default_args['model_path'])
     args = parser.parse_args()
-    if model_type is not None: 
-        args.model_type = model_type
+
     set_gpu(args.gpu)
     save_path1 = '-'.join([args.dataset, args.model_type])
     save_path2 = 'Epoch{}BZ{}'.format(args.max_epoch, args.batch_size)
