@@ -226,9 +226,8 @@ class Method(object, metaclass=abc.ABCMeta):
         Predict the results of the data.
 
         :param data: tuple, (N, C, y)
-        :param info: dict, information about the data
         :param model_name: str, name of the model
-        :return: tuple, (loss, metric, metric_name, predictions)
+        :return: tuple, (pred, pred_probability, representations, datasets_representations)
         """
         N,C,y = data
         self.model.load_state_dict(torch.load(osp.join(self.args.save_path, model_name + '-{}.pth'.format(str(self.args.seed))))['params'])
@@ -269,7 +268,6 @@ class Method(object, metaclass=abc.ABCMeta):
             preds_probability = check_softmax(test_logit)
             preds = preds_probability.argmax(axis=-1)
 
-        #should return pred, pred_probability, representations, datasets_representations
         return preds, preds_probability, representations, datasets_representations
 
     def train_epoch(self, epoch):

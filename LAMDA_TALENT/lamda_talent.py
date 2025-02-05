@@ -1,13 +1,15 @@
 import logging
 import os
-log = logging.getLogger(os.path.basename(__file__))
 from model import models_list
+from model.utils import get_classical_args, get_deep_args, get_method
 
-class lambda_talent:
+log = logging.getLogger(os.path.basename(__file__))
+
+class lamda_talent:
     """
     lambda_talent wrapper.
     """
-    def __init__(self):
+    def __init__(self, model_name, info):
         
         if model_name in models_list.classical_models:
             args, default_para, opt_space = get_classical_args()
@@ -22,23 +24,12 @@ class lambda_talent:
 
     def fit(
         self,
-        X,
-        y,
-        metric="",
-        task="",
-        n_jobs=32,
-        log_file_name="",
-        time_budget="",
-        **training_params,
+        train_val_data,
+        info,
     ):
-        pass
-        # # 1) Preprocessing  -> making lambda friendly
-        # train_val_data = func(X,y)
-        # info = ?
-        # # 2) fit
-        # self.time_cost = self.method.fit(train_val_data, info)
+        self.time_cost = self.method.fit(train_val_data, info)
 
-    def predict(self, **kwargs):
+    def predict(self, test_data):
         # should return pred, pred_probability, representations, datasets_representations, info (training time, mem, ..)
         return self.method.predict_in_details(test_data,self.model_name)
 
