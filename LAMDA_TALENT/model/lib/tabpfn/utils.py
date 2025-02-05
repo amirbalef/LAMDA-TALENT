@@ -446,6 +446,7 @@ def transformer_predict(model, eval_xs, eval_ys, eval_position,
     labels = torch.split(labels, batch_size_inference, dim=1)
     #print('PREPROCESSING TIME', str(time.time() - start))
     outputs = []
+    embeddings = []
     start = time.time()
     for batch_input, batch_label in zip(inputs, labels):
         #preprocess_transform_ = preprocess_transform if styles_configuration % 2 == 0 else 'none'
@@ -460,10 +461,14 @@ def transformer_predict(model, eval_xs, eval_ys, eval_position,
             else:
                 with torch.cuda.amp.autocast(enabled=fp16_inference):
                     output_batch = checkpoint(predict, batch_input, batch_label, style_, softmax_temperature_, True)
+        embeddings.append(model.embeddings_enc())
         outputs += [output_batch]
     #print('MODEL INFERENCE TIME ('+str(batch_input.device)+' vs '+device+', '+str(fp16_inference)+')', str(time.time()-start))
 
     outputs = torch.cat(outputs, 1)
+    #TODO: check cat
+    embeddings = torch.cat(embeddings, 1)
+    
     for i, ensemble_configuration in enumerate(ensemble_configurations):
         (class_shift_configuration, feature_shift_configuration), preprocess_transform_configuration, styles_configuration = ensemble_configuration
         output_ = outputs[:, i:i+1, :]
@@ -481,7 +486,7 @@ def transformer_predict(model, eval_xs, eval_ys, eval_position,
 
     output = torch.transpose(output, 0, 1)
 
-    return output
+    return output, embeddings
 
 def get_params_from_config(c):
     return {'max_features': c['num_features']

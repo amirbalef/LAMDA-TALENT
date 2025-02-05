@@ -78,7 +78,23 @@ class TransformerModel(nn.Module):
         mask[:,train_size:].zero_()
         mask[:,train_size:] |= torch.eye(num_query_tokens) == 1
         return bool_mask_to_att_mask(mask)
-
+    
+    def attention_weights_enc(self):
+        # TODO: check, change on mehtod that iterates over the layers and returns the name, object
+        # TODO: make the naming consistent in the encoder; remove dict
+        attention_weights = []
+        for l in self.transformer_encoder.layers:
+            attention_weights.append(l.attn_output_weights)
+        return attention_weights
+     
+    def embeddings_enc(self):
+        # TODO: check, change on mehtod that iterates over the layers and returns the name, object
+        # TODO: make the naming consistent in the encoder; remove dict
+        attention_weights = []
+        for l in self.transformer_encoder.layers:
+            attention_weights.append(l.embeddings)
+        return attention_weights       
+            
     @staticmethod
     def generate_global_att_trainset_matrix(num_global_att_tokens, seq_len, num_query_tokens):
         train_size = seq_len + num_global_att_tokens - num_query_tokens

@@ -55,6 +55,10 @@ class TransformerEncoderLayer(Module):
         self.recompute_attn = recompute_attn
 
         self.activation = _get_activation_fn(activation)
+        
+        self.attn_output_weights = None
+        self.embeddings = None
+        
 
     def __setstate__(self, state):
         if 'activation' not in state:
@@ -72,6 +76,9 @@ class TransformerEncoderLayer(Module):
         Shape:
             see the docs in Transformer class.
         """
+        self.attn_output_weights = None
+        self.embeddings = None
+        
         if self.pre_norm:
             src_ = self.norm1(src)
         else:
@@ -93,26 +100,33 @@ class TransformerEncoderLayer(Module):
 
 
             attn = partial(checkpoint, self.self_attn) if self.recompute_attn else self.self_attn
-
-            global_tokens_src2 = attn(global_tokens_src, global_and_train_tokens_src, global_and_train_tokens_src, None, True, global_src_mask)[0]
-            train_tokens_src2 = attn(train_tokens_src, global_tokens_src, global_tokens_src, None, True, trainset_src_mask)[0]
-            eval_tokens_src2 = attn(eval_tokens_src, src_, src_,
-                                    None, True, valset_src_mask)[0]
+            
+            print("test the maps from encoder")
+            # TODO: validate
+            global_tokens_src2, global_attn_weights = attn(global_tokens_src, global_and_train_tokens_src, global_and_train_tokens_src, None, True, global_src_mask)
+            train_tokens_src2, train_attn_weights = attn(train_tokens_src, global_tokens_src, global_tokens_src, None, True, trainset_src_mask)
+            eval_tokens_src2, eval_attn_weights = attn(eval_tokens_src, src_, src_,
+                                    None, True, valset_src_mask)
 
             src2 = torch.cat([global_tokens_src2, train_tokens_src2, eval_tokens_src2], dim=0)
+            self.attn_output_weights  = torch.cat([global_attn_weights, train_attn_weights, eval_attn_weights], dim=1)
 
         elif isinstance(src_mask, int):
             assert src_key_padding_mask is None
             single_eval_position = src_mask
-            src_left = self.self_attn(src_[:single_eval_position], src_[:single_eval_position], src_[:single_eval_position])[0]
-            src_right = self.self_attn(src_[single_eval_position:], src_[:single_eval_position], src_[:single_eval_position])[0]
+            # TODO: check the map acqusition
+            src_left,  att_map_left = self.self_attn(src_[:single_eval_position], src_[:single_eval_position], src_[:single_eval_position])
+            src_right, att_map_right= self.self_attn(src_[single_eval_position:], src_[:single_eval_position], src_[:single_eval_position])
+            
             src2 = torch.cat([src_left, src_right], dim=0)
+            self.attn_output_weights = torch.cat([att_map_left, att_map_right], dim=1)
         else:
             if self.recompute_attn:
-                src2 = checkpoint(self.self_attn, src_, src_, src_, src_key_padding_mask, True, src_mask)[0]
+                # TODO: check the map acqusition
+                src2, self.attn_output_weights = checkpoint(self.self_attn, src_, src_, src_, src_key_padding_mask, True, src_mask)
             else:
-                src2 = self.self_attn(src_, src_, src_, attn_mask=src_mask,
-                                      key_padding_mask=src_key_padding_mask)[0]
+                src2, self.attn_output_weights = self.self_attn(src_, src_, src_, attn_mask=src_mask,
+                                      key_padding_mask=src_key_padding_mask)
         src = src + self.dropout1(src2)
         if not self.pre_norm:
             src = self.norm1(src)
@@ -126,4 +140,6 @@ class TransformerEncoderLayer(Module):
 
         if not self.pre_norm:
             src = self.norm2(src)
+            
+        self.embeddings = src
         return src

@@ -191,7 +191,7 @@ class TabPFNClassifier(BaseEstimator, ClassifierMixin):
 
         eval_pos = self.X_.shape[0]
 
-        prediction = transformer_predict(self.model[2], X_full, y_full, eval_pos,
+        prediction, embeddings = transformer_predict(self.model[2], X_full, y_full, eval_pos,
                                          device=self.device,
                                          style=self.style,
                                          inference_mode=True,
@@ -208,7 +208,7 @@ class TabPFNClassifier(BaseEstimator, ClassifierMixin):
                                          batch_size_inference=self.batch_size_inference,
                                          **get_params_from_config(self.c))
         prediction_, y_ = prediction.squeeze(0), y_full.squeeze(1).long()[eval_pos:]
-
+        self.model.embeddings = embeddings
         return prediction_.detach().cpu().numpy() if self.no_grad else prediction_
 
     def predict(self, X, return_winning_probability=False, normalize_with_test=False):
