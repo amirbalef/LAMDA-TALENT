@@ -325,7 +325,7 @@ def get_classical_args():
     args.config['fit']['n_bins'] = args.n_bins
     return args,default_para,opt_space   
 
-def get_deep_args():  
+def get_deep_args(model_type=None):  
     """
     Get the arguments for deep learning models.
 
@@ -349,6 +349,7 @@ def get_deep_args():
                                  'hyperfast', 'bishop', 'realmlp', 'protogate', 'mlp_plr',
                                  'excelformer', 'grande','amformer','tabptm','trompt','tabm',
                                  ])
+ 
     
     # optimization parameters
     parser.add_argument('--max_epoch', type=int, default=default_args['max_epoch'])
@@ -372,7 +373,8 @@ def get_deep_args():
     parser.add_argument('--dataset_path', type=str, default=default_args['dataset_path'])  
     parser.add_argument('--model_path', type=str, default=default_args['model_path'])
     args = parser.parse_args()
-    
+    if model_type is not None: 
+        args.model_type = model_type
     set_gpu(args.gpu)
     save_path1 = '-'.join([args.dataset, args.model_type])
     save_path2 = 'Epoch{}BZ{}'.format(args.max_epoch, args.batch_size)
