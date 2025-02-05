@@ -1,7 +1,7 @@
 import logging
 import os
-from .model import models_list
-from .model.utils import get_classical_args, get_deep_args, get_method
+from lamda_talent.model import models_list
+from lamda_talent.model.utils import get_classical_args, get_deep_args, get_method
 
 log = logging.getLogger(os.path.basename(__file__))
 
