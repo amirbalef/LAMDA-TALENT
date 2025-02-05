@@ -220,6 +220,58 @@ class Method(object, metaclass=abc.ABCMeta):
         
         return vl, vres, metric_name, test_logit
 
+
+    def predict_in_details(self, data, model_name):
+        """
+        Predict the results of the data.
+
+        :param data: tuple, (N, C, y)
+        :param info: dict, information about the data
+        :param model_name: str, name of the model
+        :return: tuple, (loss, metric, metric_name, predictions)
+        """
+        N,C,y = data
+        self.model.load_state_dict(torch.load(osp.join(self.args.save_path, model_name + '-{}.pth'.format(str(self.args.seed))))['params'])
+        print('best epoch {}, best val res={:.4f}'.format(self.trlog['best_epoch'], self.trlog['best_res']))
+        ## Evaluation Stage
+        self.model.eval()
+
+        self.data_format(False, N, C, y)
+
+        test_logit, test_label = [], []
+        representations = []
+        datasets_representations = None
+        with torch.no_grad():
+            for i, (X, y) in tqdm(enumerate(self.test_loader)):
+                if self.N is not None and self.C is not None:
+                    X_num, X_cat = X[0], X[1]
+                elif self.C is not None and self.N is None:
+                    X_num, X_cat = None, X
+                else:
+                    X_num, X_cat = X, None  
+                        
+                pred = self.model(X_num, X_cat)
+                representations.append(self.model.representations)
+
+                test_logit.append(pred)
+                test_label.append(y)
+                
+        test_logit = torch.cat(test_logit, 0)
+        test_label = torch.cat(test_label, 0)
+
+        representations = torch.cat(representations, 0)
+
+        if self.is_regression:
+            preds_probability = None
+            preds = test_logit
+
+        else:
+            preds_probability = check_softmax(test_logit)
+            preds = preds_probability.argmax(axis=-1)
+
+        #should return pred, pred_probability, representations, datasets_representations
+        return preds, preds_probability, representations, datasets_representations
+
     def train_epoch(self, epoch):
         """
         Train the model for one epoch.
