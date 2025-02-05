@@ -257,7 +257,7 @@ def get_classical_args():
     import argparse
     import warnings
     warnings.filterwarnings("ignore")
-    with open('configs/classical_configs.json','r') as file:
+    with open(THIS_PATH + "/../configs/classical_configs.json", "r") as file:
         default_args = json.load(file)
     parser = argparse.ArgumentParser()
     # basic parameters
@@ -310,10 +310,10 @@ def get_classical_args():
     
     config_default_path = os.path.join('configs','default',args.model_type+'.json')
     config_opt_path = os.path.join('configs','opt_space',args.model_type+'.json')
-    with open(config_default_path,'r') as file:
+    with open(THIS_PATH + '/../' + config_default_path,'r') as file:
         default_para = json.load(file)  
     
-    with open(config_opt_path,'r') as file:
+    with open(THIS_PATH + "/../" +  config_opt_path, "r") as file:
         opt_space = json.load(file)
 
     args.config = default_para[args.model_type]
