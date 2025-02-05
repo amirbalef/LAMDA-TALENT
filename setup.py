@@ -1,7 +1,7 @@
 from setuptools import setup
 import os
 
-with open("LAMDA_TALENT/requirements.txt") as f:
+with open("lamda_talent/requirements.txt") as f:
     requirements = f.read().splitlines()
 
 setup(
