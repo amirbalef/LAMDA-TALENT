@@ -5,3 +5,4 @@ lamda_talent: A machine learning library for tabular data.
 __version__ = "1.0.0"
 
 from .lamda_talent import lamda_talent
+import model
